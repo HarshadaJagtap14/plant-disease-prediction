@@ -2,17 +2,26 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 from PIL import Image
+import requests
+import tempfile
 
 # Prediction function
 def model_prediction(test_image):
     try:
-        # Load the trained model
-        model = tf.keras.models.load_model('trained_plant_disease_model.keras')
+        # Load the trained model from Google Drive
+        url = 'https://drive.google.com/uc?id=1AbCDEfgHiJkLmNoPQrsTu' 
+
+        # Download the model file
+        response = requests.get(url)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".h5") as tmp:
+            tmp.write(response.content)
+            tmp.flush()
+            model = tf.keras.models.load_model(tmp.name)
 
         # Preprocess the image (assuming model expects 64x64x3)
-        image = Image.open(test_image).convert("RGB").resize((128,128))  # Resize and ensure 3 channels
+        image = Image.open(test_image).convert("RGB").resize((128, 128))  
         input_arr = np.array(image) / 255.0  # Normalize to [0,1]
-        input_arr = np.expand_dims(input_arr, axis=0)  # Add batch dimension
+        input_arr = np.expand_dims(input_arr, axis=0) 
 
         # Make prediction
         prediction = model.predict(input_arr)
